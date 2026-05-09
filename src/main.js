@@ -4,7 +4,6 @@
 
 import { engine, simulate, emitBurst, clearParticles } from "./engine.js";
 import { initRenderer, resizeCanvas, render }           from "./renderer.js";
-import { loadLibrary }                                   from "./presets.js";
 import * as UI from "./ui.js";
 
 // ── Bootstrap ─────────────────────────────────────────────────
@@ -14,7 +13,6 @@ initRenderer(canvas);
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-UI.presetLibrary = loadLibrary();
 UI.refreshPresetSelect();
 UI.wireUI(UI.loadPreset);
 UI.ui.clearOnLoadState.textContent = engine.clearOnLoad ? "ON" : "OFF";

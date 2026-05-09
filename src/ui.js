@@ -93,9 +93,9 @@ export const ui = {
 
 // ── State ─────────────────────────────────────────────────────
 
-export let presetLibrary  = {};
+export let presetLibrary    = loadLibrary();
 export let selectedPresetId = "hit";
-export let currentPreset  = null;
+export let currentPreset    = null;
 
 // ── Color scales ──────────────────────────────────────────────
 
