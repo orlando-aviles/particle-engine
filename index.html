@@ -102,10 +102,6 @@
       height: calc(100vh - 45px);
     }
 
-    @media (max-width: 860px) {
-      main { grid-template-columns: 1fr; height: auto; overflow: auto; }
-    }
-
     /* ── Sidebar ─────────────────────────────────────── */
     .sidebar {
       border-right: 1px solid var(--border);
@@ -154,6 +150,60 @@
     }
 
     .hud-chip strong { color: var(--text); }
+
+    /* ── Mobile ──────────────────────────────────────── */
+    @media (max-width: 860px) {
+      body {
+        overflow: hidden;
+        height: 100dvh;
+        grid-template-rows: auto 1fr;
+      }
+
+      .header-pills { display: none; }
+      header { padding: 8px 12px; }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - 40px);
+        overflow: hidden;
+      }
+
+      .canvas-pane {
+        flex: 0 0 52%;
+        min-height: 0;
+      }
+
+      canvas { touch-action: none; }
+
+      .sidebar {
+        flex: 1 1 0;
+        border-right: none;
+        border-top: 1px solid var(--border2);
+        border-radius: 16px 16px 0 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 0 8px 16px;
+        background: var(--surface);
+        position: relative;
+      }
+
+      .sidebar::before {
+        content: "";
+        display: block;
+        width: 36px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--border2);
+        margin: 10px auto 8px;
+      }
+
+      .accordion { border-radius: 10px; }
+      .btn { padding: 10px 9px; font-size: 0.8rem; }
+      .acc-title { padding: 11px 12px; font-size: 0.75rem; }
+      .canvas-hud { bottom: 10px; left: 10px; }
+      .hud-chip { font-size: 0.7rem; padding: 3px 10px; }
+    }
 
     /* ── Accordion ───────────────────────────────────── */
     .accordion {
