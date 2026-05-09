@@ -3,1656 +3,607 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Particle Engine (v0.3 Hue Range)</title>
+  <title>Particle Engine</title>
 
   <style>
-    :root{
-      --bg:#0f0f12;
-      --panel:#18181d;
-      --panel2:#1f1f26;
-      --text:#eaeaea;
-      --muted:#a3a3a3;
-      --accent:#4cafef;
-      --good:#4cefa1;
-      --warn:#ffc107;
-      --danger:#ff3b6b;
-
-      --radius:14px;
+    /* ── Tokens ─────────────────────────────────────── */
+    :root {
+      --bg:       #0b0b0f;
+      --surface:  #111116;
+      --surface2: #18181f;
+      --surface3: #1e1e27;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.12);
+      --text:     #e8e8f0;
+      --muted:    #888899;
+      --accent:   #5b9cf6;
+      --good:     #4dd98a;
+      --warn:     #f5c842;
+      --danger:   #f05070;
+      --radius:   12px;
+      --radius-sm: 8px;
     }
 
-    *{box-sizing:border-box}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:Arial,sans-serif;
-      min-height:100vh;
-      display:grid;
-      grid-template-rows:auto 1fr;
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
     }
 
-    header{
-      padding:14px 14px 10px;
-      border-bottom:1px solid rgba(255,255,255,0.08);
-      background:linear-gradient(135deg, rgba(76,175,239,0.13), rgba(76,239,161,0.05));
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg,
+        rgba(91,156,246,0.08) 0%,
+        rgba(123,108,246,0.04) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .title-row{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+    .header-left { display: flex; align-items: baseline; gap: 10px; }
+
+    h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      background: linear-gradient(135deg, #a0c4ff, #c4b5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    h1{
-      margin:0;
-      font-size:1.2rem;
-      letter-spacing:0.2px;
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(91,156,246,0.15);
+      border: 1px solid rgba(91,156,246,0.25);
+      color: #8bb8ff;
+      font-weight: 600;
     }
 
-    .subtitle{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:0.95rem;
-      line-height:1.35;
-      max-width:980px;
+    .header-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.78rem;
     }
 
-    .badge{
-      display:inline-block;
-      font-size:0.75rem;
-      padding:5px 9px;
-      border-radius:999px;
-      margin-left:10px;
-      vertical-align:middle;
-      background:rgba(255,255,255,0.08);
-      color:#ddd;
-      border:1px solid rgba(255,255,255,0.12);
-      user-select:none;
+    .kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 5px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: #ccc;
+      font-size: 0.72rem;
+      font-family: monospace;
     }
 
-    .badge.v{
-      background:rgba(76,175,239,0.12);
-      border-color:rgba(76,175,239,0.22);
-      color:#8fd2ff;
+    /* ── Layout ─────────────────────────────────────── */
+    main {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      overflow: hidden;
+      height: calc(100vh - 45px);
     }
 
-    .tiny{ font-size:0.85rem; color:var(--muted); }
-
-    main{
-      display:grid;
-      grid-template-columns:360px 1fr;
-      gap:12px;
-      padding:12px;
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; height: auto; overflow: auto; }
     }
 
-    @media (max-width: 900px){
-      main{ grid-template-columns:1fr; }
+    /* ── Sidebar ─────────────────────────────────────── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: var(--surface);
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface3) transparent;
     }
 
-    .panel{
-      background:var(--panel);
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:var(--radius);
-      padding:12px;
-      box-shadow:0 10px 20px rgba(0,0,0,0.35);
+    /* ── Canvas pane ─────────────────────────────────── */
+    .canvas-pane {
+      position: relative;
+      overflow: hidden;
     }
 
-    canvas{
-      width:100%;
-      height:100%;
-      border-radius:var(--radius);
-      display:block;
-      background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06), rgba(0,0,0,0.45));
-      border:1px solid rgba(255,255,255,0.08);
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.20);
-      touch-action:none;
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: crosshair;
     }
 
-    .controls{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:8px;
+    .canvas-hud {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+      pointer-events: none;
     }
 
-    .row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-      align-items:center;
+    .hud-chip {
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      padding: 4px 13px;
+      font-size: 0.76rem;
+      color: var(--muted);
     }
 
-    .btn{
-      appearance:none;
-      border:1px solid rgba(255,255,255,0.12);
-      background:var(--panel2);
-      color:var(--text);
-      border-radius:12px;
-      padding:11px 12px;
-      text-align:left;
-      font-weight:bold;
-      cursor:pointer;
-      transition: transform 0.06s, border-color 0.2s, background 0.2s;
+    .hud-chip strong { color: var(--text); }
+
+    /* ── Accordion ───────────────────────────────────── */
+    .accordion {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      overflow: hidden;
+    }
+
+    .acc-title {
+      list-style: none;
+      cursor: pointer;
+      padding: 8px 11px;
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .accordion[open] .acc-title {
+      color: var(--text);
+      border-bottom-color: var(--border);
+    }
+
+    .acc-title::-webkit-details-marker { display: none; }
+
+    .acc-title::after {
+      content: "›";
+      font-size: 1rem;
+      color: var(--muted);
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+
+    .accordion[open] .acc-title::after { transform: rotate(90deg); }
+
+    .acc-body {
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* ── Controls ────────────────────────────────────── */
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .label-val {
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .group { display: flex; flex-direction: column; gap: 3px; }
+
+    /* Buttons */
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border2);
+      background: var(--surface3);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 7px 9px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.06s;
+      text-align: left;
+      line-height: 1.3;
       touch-action: manipulation;
     }
 
-    .btn:hover{
-      border-color: rgba(76,175,239,0.35);
-      background: rgba(76,175,239,0.10);
+    .btn small {
+      display: block;
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 0.68rem;
+      margin-top: 1px;
     }
 
-    .btn:active{ transform: translateY(1px); }
+    .btn:hover  { border-color: var(--accent); background: rgba(91,156,246,0.1); }
+    .btn:active { transform: translateY(1px); }
+    .btn.good:hover   { border-color: var(--good);   background: rgba(77,217,138,0.1); }
+    .btn.warn:hover   { border-color: var(--warn);   background: rgba(245,200,66,0.1); }
+    .btn.danger:hover { border-color: var(--danger); background: rgba(240,80,112,0.1); }
 
-    .btn small{
-      display:block;
-      margin-top:5px;
-      color:var(--muted);
-      font-weight:normal;
-    }
-
-    .btn.good:hover{ border-color: rgba(76,239,161,0.40); background: rgba(76,239,161,0.12); }
-    .btn.warn:hover{ border-color: rgba(255,193,7,0.40); background: rgba(255,193,7,0.10); }
-    .btn.danger:hover{ border-color: rgba(255,59,107,0.35); background: rgba(255,59,107,0.10); }
-
-    .label{
-      font-size:0.85rem;
-      color:var(--muted);
-      margin:6px 0 4px;
-    }
-
-    input[type="range"]{ width:100%; }
-
-    select, input[type="text"]{
-      width:100%;
-      padding:10px 10px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,0.14);
-      background: rgba(0,0,0,0.25);
+    /* Inputs */
+    select, input[type="text"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+      background: rgba(0,0,0,0.3);
       color: var(--text);
+      font-size: 0.78rem;
       outline: none;
+      transition: border-color 0.15s;
     }
 
-    .check{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 10px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      color: var(--text);
-      user-select:none;
+    select:focus, input[type="text"]:focus { border-color: var(--accent); }
+
+    /* Range sliders */
+    input[type="range"] {
+      width: 100%;
+      height: 3px;
+      accent-color: var(--accent);
+      cursor: pointer;
     }
 
-    .check input{ transform: scale(1.1); }
-
-    .hud{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      color:var(--muted);
-      font-size:0.9rem;
-      margin-top:10px;
-      padding-top:10px;
-      border-top:1px solid rgba(255,255,255,0.08);
+    /* Checkbox */
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+      font-size: 0.76rem;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
     }
 
-    .hint{
-      color:var(--muted);
-      font-size:0.9rem;
-      margin-top:10px;
-      line-height:1.4;
+    .check input { accent-color: var(--accent); transform: scale(1.1); cursor: pointer; }
+
+    /* Color scales */
+    .color-scale {
+      height: 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
-    .kbd{
-      display:inline-block;
-      padding:2px 7px;
-      border-radius:7px;
-      border:1px solid rgba(255,255,255,0.16);
-      background: rgba(0,0,0,0.25);
-      color:#ddd;
-      font-size:0.82rem;
-      margin:0 2px;
-    }
-
-    code{ color:#cfe7ff; }
-
-    /* Accordion */
-    .accordion{
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:var(--radius);
-      background: rgba(255,255,255,0.03);
-      overflow:hidden;
-      margin-bottom:10px;
-    }
-
-    .acc-title{
-      list-style:none;
-      cursor:pointer;
-      padding:12px 12px;
-      font-weight:bold;
-      user-select:none;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .acc-title::-webkit-details-marker{ display:none; }
-
-    .acc-title::after{
-      content:"▾";
-      color:var(--muted);
-      font-size:0.95rem;
-      transition: transform 0.2s ease;
-    }
-
-    .accordion[open] .acc-title::after{
-      transform: rotate(180deg);
-    }
-
-    .acc-body{ padding: 0 12px 12px; }
-
-    .divider{
-      margin: 10px 0 8px;
+    .divider {
       height: 1px;
-      background: rgba(255,255,255,0.08);
+      background: var(--border);
       border: 0;
     }
 
-    .pill{
-      display:inline-block;
-      padding: 2px 8px;
+    /* Quick-load chips */
+    .preset-chips {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 3px 9px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(0,0,0,0.22);
+      border: 1px solid var(--border2);
+      background: var(--surface3);
       color: var(--muted);
-      font-size: 0.78rem;
-      margin-left: 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      user-select: none;
     }
 
-    .scale{
-      height: 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(0,0,0,0.25);
-      opacity: 0.92;
-    }
-
-    .readout{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      color: var(--muted);
-      font-size: 0.82rem;
-      margin-top: 2px;
-    }
-
-    /* Mobile usability: give scroll-gutter so sliders don't hog edge-to-edge */
-    @media (max-width: 900px){
-      .panel{ padding: 12px 14px; }
-      .acc-body{ padding: 0 14px 12px; }
-      input[type="range"], select, input[type="text"], .check{
-        padding-left: 12px;
-        padding-right: 12px;
-      }
-      /* Make the actual slider rail not start at edge */
-      input[type="range"]{
-        width: calc(100% - 20px);
-        margin-left: 10px;
-        margin-right: 10px;
-      }
-    }
+    .chip:hover { border-color: var(--accent); color: var(--text); }
   </style>
 </head>
 
 <body>
+
 <header>
-  <div class="title-row">
-    <h1>Particle Engine <span class="badge v">v0.3</span></h1>
-    <div class="tiny">Preset Editor · Hue Range Colors · LocalStorage Library</div>
+  <div class="header-left">
+    <h1>Particle Engine</h1>
+    <span class="badge">v0.4</span>
   </div>
-  <div class="subtitle">
-    Tap/click to emit. Drag to paint bursts. Edit parameters in <b>Preset Editor</b>, save to <b>Library</b>.
-    <span class="pill">Space</span> pause
-    <span class="pill">C</span> clear
-    <span class="pill">1–5</span> defaults
+  <div class="header-pills">
+    <span><kbd class="kbd">Space</kbd> pause</span>
+    <span><kbd class="kbd">C</kbd> clear</span>
+    <span><kbd class="kbd">1–5</kbd> presets</span>
   </div>
 </header>
 
 <main>
-  <section class="panel">
-    <!-- PRESET LIBRARY -->
+
+  <aside class="sidebar">
+
+    <!-- Presets -->
     <details class="accordion" open>
-      <summary class="acc-title">Presets (Library)</summary>
-      <div class="acc-body controls">
+      <summary class="acc-title">Presets</summary>
+      <div class="acc-body">
 
-        <div class="label">Preset Library</div>
-        <select id="presetSelect"></select>
+        <div class="preset-chips">
+          <span class="chip" data-preset="hit">Hit Sparks</span>
+          <span class="chip" data-preset="heal">Heal</span>
+          <span class="chip" data-preset="shimmer">Shimmer</span>
+          <span class="chip" data-preset="smoke">Smoke</span>
+          <span class="chip" data-preset="confetti">Confetti</span>
+        </div>
+
+        <div class="group">
+          <div class="label">Library</div>
+          <select id="presetSelect"></select>
+        </div>
 
         <div class="row">
-          <button class="btn good" id="btnLoadPreset">📥 Load <small>Apply selected preset</small></button>
-          <button class="btn warn" id="btnClearParticles">🧽 Clear <small>Remove all particles</small></button>
+          <button class="btn good"   id="btnLoadPreset">📥 Load<small>Apply selected</small></button>
+          <button class="btn warn"   id="btnClearParticles">🧽 Clear<small>Remove particles</small></button>
         </div>
 
         <hr class="divider" />
 
-        <div class="label">Save Preset As</div>
-        <input id="saveName" type="text" placeholder="e.g. Ice Shards Burst" />
-
-        <div class="row">
-          <button class="btn good" id="btnSaveNew">💾 Save New <small>Add as new preset</small></button>
-          <button class="btn warn" id="btnOverwrite">♻️ Overwrite <small>Replace selected preset</small></button>
+        <div class="group">
+          <div class="label">Save as</div>
+          <input id="saveName" type="text" placeholder="My Cool Preset" />
         </div>
 
         <div class="row">
-          <button class="btn danger" id="btnDelete">🗑️ Delete <small>Remove selected</small></button>
-          <button class="btn" id="btnResetDefaults">🧬 Reset Defaults <small>Restore built-ins</small></button>
+          <button class="btn good"   id="btnSaveNew">💾 Save New<small>Add to library</small></button>
+          <button class="btn warn"   id="btnOverwrite">♻ Overwrite<small>Replace selected</small></button>
         </div>
-
-        <hr class="divider" />
-
         <div class="row">
-          <button class="btn" id="btnExportJSON">📦 Export JSON <small>Copy presets to clipboard</small></button>
-          <button class="btn" id="btnImportJSON">📩 Import JSON <small>Paste presets from clipboard</small></button>
+          <button class="btn danger" id="btnDelete">🗑 Delete<small>Remove selected</small></button>
+          <button class="btn"        id="btnResetDefaults">🧬 Defaults<small>Restore built-ins</small></button>
+        </div>
+        <div class="row">
+          <button class="btn" id="btnExportJSON">📦 Export<small>Copy JSON</small></button>
+          <button class="btn" id="btnImportJSON">📩 Import<small>Paste JSON</small></button>
         </div>
 
       </div>
     </details>
 
-    <!-- PRESET EDITOR -->
+    <!-- Editor -->
     <details class="accordion" open>
-      <summary class="acc-title">Preset Editor (Options)</summary>
-      <div class="acc-body controls">
+      <summary class="acc-title">Preset Editor</summary>
+      <div class="acc-body">
 
-        <div class="label">Name (for UI only)</div>
-        <input id="ed_name" type="text" />
+        <div class="group">
+          <div class="label">Name</div>
+          <input id="ed_name" type="text" placeholder="Preset name" />
+        </div>
 
         <div class="row">
-          <div>
+          <div class="group">
             <div class="label">Shape</div>
             <select id="ed_shape">
-              <option value="circle">circle</option>
-              <option value="square">square</option>
-              <option value="star">star</option>
-              <option value="plus">plus</option>
+              <option value="circle">Circle</option>
+              <option value="square">Square</option>
+              <option value="star">Star</option>
+              <option value="plus">Plus</option>
             </select>
           </div>
-          <div>
-            <div class="label">Animate Hue Over Life</div>
-            <div class="check">
+          <div class="group">
+            <div class="label">Animate Hue</div>
+            <label class="check">
               <input type="checkbox" id="ed_hueAnim" />
-              <span class="tiny">Blend birth hue → death hue</span>
-            </div>
+              Birth → death
+            </label>
           </div>
         </div>
 
         <hr class="divider" />
 
-        <div class="label">Hue Range (degrees) <span class="pill">A→B</span></div>
-        <div class="row">
-          <input type="range" id="ed_hueA" min="0" max="360" step="1" />
-          <input type="range" id="ed_hueB" min="0" max="360" step="1" />
+        <div class="group">
+          <div class="label">Hue Range <span class="label-val" id="roHue">0° → 360°</span></div>
+          <div class="row">
+            <input type="range" id="ed_hueA" min="0" max="360" step="1" />
+            <input type="range" id="ed_hueB" min="0" max="360" step="1" />
+          </div>
+          <div class="color-scale" id="scaleHue"></div>
         </div>
-        <div class="scale" id="scaleHue"></div>
-        <div class="readout"><span id="roHue">Hue: 0 → 360</span><span class="tiny">wrap-aware</span></div>
 
-        <div class="label">Saturation (0–100) <span class="pill">min→max</span></div>
-        <div class="row">
-          <input type="range" id="ed_satMin" min="0" max="100" step="1" />
-          <input type="range" id="ed_satMax" min="0" max="100" step="1" />
+        <div class="group">
+          <div class="label">Saturation <span class="label-val" id="roSat">0 → 100</span></div>
+          <div class="row">
+            <input type="range" id="ed_satMin" min="0" max="100" step="1" />
+            <input type="range" id="ed_satMax" min="0" max="100" step="1" />
+          </div>
+          <div class="color-scale" id="scaleSat"></div>
         </div>
-        <div class="scale" id="scaleSat"></div>
-        <div class="readout"><span id="roSat">Sat: 0 → 100</span><span class="tiny">gray → pure</span></div>
 
-        <div class="label">Value / Brightness (0–100) <span class="pill">min→max</span></div>
-        <div class="row">
-          <input type="range" id="ed_valMin" min="0" max="100" step="1" />
-          <input type="range" id="ed_valMax" min="0" max="100" step="1" />
+        <div class="group">
+          <div class="label">Brightness <span class="label-val" id="roVal">0 → 100</span></div>
+          <div class="row">
+            <input type="range" id="ed_valMin" min="0" max="100" step="1" />
+            <input type="range" id="ed_valMax" min="0" max="100" step="1" />
+          </div>
+          <div class="color-scale" id="scaleVal"></div>
         </div>
-        <div class="scale" id="scaleVal"></div>
-        <div class="readout"><span id="roVal">Val: 0 → 100</span><span class="tiny">dark → glow</span></div>
 
         <hr class="divider" />
 
-        <div class="label">Density Multiplier</div>
-        <input type="range" id="ed_mult" min="0.05" max="2.00" step="0.01" />
-
-        <div class="label">Spread (degrees) <span class="pill">A→B</span></div>
-        <div class="row">
-          <input type="range" id="ed_spreadA" min="-180" max="180" step="1" />
-          <input type="range" id="ed_spreadB" min="-180" max="180" step="1" />
+        <div class="group">
+          <div class="label">Density <span class="label-val" id="roMult">×1.00</span></div>
+          <input type="range" id="ed_mult" min="0.05" max="2.00" step="0.01" />
         </div>
 
-        <div class="label">Speed</div>
-        <div class="row">
-          <input type="range" id="ed_speedMin" min="0" max="900" step="1" />
-          <input type="range" id="ed_speedMax" min="0" max="900" step="1" />
+        <div class="group">
+          <div class="label">Spread <span class="label-val" id="roSpread">0° → 360°</span></div>
+          <div class="row">
+            <input type="range" id="ed_spreadA" min="-180" max="180" step="1" />
+            <input type="range" id="ed_spreadB" min="-180" max="180" step="1" />
+          </div>
         </div>
 
-        <div class="label">Size</div>
-        <div class="row">
-          <input type="range" id="ed_sizeMin" min="0.5" max="40" step="0.1" />
-          <input type="range" id="ed_sizeMax" min="0.5" max="60" step="0.1" />
+        <div class="group">
+          <div class="label">Speed <span class="label-val" id="roSpeed">0 → 200</span></div>
+          <div class="row">
+            <input type="range" id="ed_speedMin" min="0" max="900" step="1" />
+            <input type="range" id="ed_speedMax" min="0" max="900" step="1" />
+          </div>
         </div>
 
-        <div class="label">Size Decay</div>
-        <div class="row">
-          <input type="range" id="ed_sizeDecayMin" min="0" max="40" step="0.1" />
-          <input type="range" id="ed_sizeDecayMax" min="0" max="40" step="0.1" />
+        <div class="group">
+          <div class="label">Size <span class="label-val" id="roSize">1 → 6</span></div>
+          <div class="row">
+            <input type="range" id="ed_sizeMin" min="0.5" max="40"  step="0.1" />
+            <input type="range" id="ed_sizeMax" min="0.5" max="60"  step="0.1" />
+          </div>
         </div>
 
-        <div class="label">Life (seconds)</div>
-        <div class="row">
-          <input type="range" id="ed_lifeMin" min="0.05" max="6" step="0.01" />
-          <input type="range" id="ed_lifeMax" min="0.05" max="6" step="0.01" />
+        <div class="group">
+          <div class="label">Size Decay <span class="label-val" id="roSizeDecay">0 → 8</span></div>
+          <div class="row">
+            <input type="range" id="ed_sizeDecayMin" min="0" max="40" step="0.1" />
+            <input type="range" id="ed_sizeDecayMax" min="0" max="40" step="0.1" />
+          </div>
         </div>
 
-        <div class="label">Drag</div>
-        <div class="row">
-          <input type="range" id="ed_dragMin" min="0" max="8" step="0.05" />
-          <input type="range" id="ed_dragMax" min="0" max="8" step="0.05" />
+        <div class="group">
+          <div class="label">Life <span class="label-val" id="roLife">0.4s → 1.0s</span></div>
+          <div class="row">
+            <input type="range" id="ed_lifeMin" min="0.05" max="6" step="0.01" />
+            <input type="range" id="ed_lifeMax" min="0.05" max="6" step="0.01" />
+          </div>
         </div>
 
-        <div class="label">Gravity Scale</div>
-        <input type="range" id="ed_gravityScale" min="-2" max="2" step="0.01" />
+        <div class="group">
+          <div class="label">Drag <span class="label-val" id="roDrag">0 → 2</span></div>
+          <div class="row">
+            <input type="range" id="ed_dragMin" min="0" max="8" step="0.05" />
+            <input type="range" id="ed_dragMax" min="0" max="8" step="0.05" />
+          </div>
+        </div>
 
-        <div class="label">Jitter</div>
-        <input type="range" id="ed_jitter" min="0" max="120" step="1" />
+        <div class="group">
+          <div class="label">Gravity Scale <span class="label-val" id="roGravityScale">1.00</span></div>
+          <input type="range" id="ed_gravityScale" min="-2" max="2" step="0.01" />
+        </div>
 
-        <div class="label">Fade</div>
-        <input type="range" id="ed_fade" min="0.05" max="3.0" step="0.01" />
+        <div class="group">
+          <div class="label">Jitter <span class="label-val" id="roJitter">10</span></div>
+          <input type="range" id="ed_jitter" min="0" max="120" step="1" />
+        </div>
+
+        <div class="group">
+          <div class="label">Fade <span class="label-val" id="roFade">1.00</span></div>
+          <input type="range" id="ed_fade" min="0.05" max="3.0" step="0.01" />
+        </div>
 
         <hr class="divider" />
 
         <div class="row">
-          <button class="btn" id="btnRandomize">🎲 Randomize <small>Small chaos remix</small></button>
-          <button class="btn warn" id="btnRevertSelected">↩️ Revert <small>Reload selected preset</small></button>
+          <button class="btn" id="btnRandomize">🎲 Randomize<small>Chaos remix</small></button>
+          <button class="btn warn" id="btnRevertSelected">↩ Revert<small>Reload preset</small></button>
         </div>
+
       </div>
     </details>
 
-    <!-- ENGINE MENU -->
+    <!-- Engine -->
     <details class="accordion" open>
       <summary class="acc-title">Engine</summary>
-      <div class="acc-body controls">
+      <div class="acc-body">
 
-        <div class="label">Emitter Strength</div>
-        <input type="range" id="strength" min="10" max="200" value="60" />
+        <div class="group">
+          <div class="label">Strength <span class="label-val" id="roStrength">60</span></div>
+          <input type="range" id="strength" min="10" max="200" value="60" />
+        </div>
 
-        <div class="label">Global Gravity</div>
-        <input type="range" id="gravity" min="-200" max="800" value="240" />
+        <div class="group">
+          <div class="label">Gravity <span class="label-val" id="roGravity">240</span></div>
+          <input type="range" id="gravity" min="-200" max="800" value="240" />
+        </div>
 
         <div class="row">
-          <div>
-            <div class="label">Brush Spacing</div>
+          <div class="group">
+            <div class="label">Brush Spacing <span class="label-val" id="roBrushSpacing">14</span></div>
             <input type="range" id="brushSpacing" min="2" max="60" value="14" />
           </div>
-          <div>
+          <div class="group">
             <div class="label">Drag Brush</div>
             <select id="brushMode">
-              <option value="on">on</option>
-              <option value="off">off</option>
+              <option value="on">On</option>
+              <option value="off">Off</option>
             </select>
           </div>
         </div>
 
         <div class="row">
-          <div>
+          <div class="group">
             <div class="label">Blend Mode</div>
             <select id="blendMode">
-              <option value="source-over">normal</option>
-              <option value="lighter">lighter (glow)</option>
-              <option value="screen">screen</option>
+              <option value="source-over">Normal</option>
+              <option value="lighter">Lighter (glow)</option>
+              <option value="screen">Screen</option>
             </select>
           </div>
-          <div>
-            <div class="label">Max Particles</div>
+          <div class="group">
+            <div class="label">Max Particles <span class="label-val" id="roMaxParticles">6,000</span></div>
             <input type="range" id="maxParticles" min="200" max="15000" step="100" value="6000" />
           </div>
         </div>
 
         <div class="row">
-          <button class="btn" id="pause">⏸️ Pause <small>Toggle simulation</small></button>
-          <button class="btn" id="toggleClearOnLoad">🧼 Clear On Load: <b id="clearOnLoadState">ON</b><small>Auto-clear when loading preset</small></button>
+          <button class="btn" id="pause">⏸ Pause<small>Toggle simulation</small></button>
+          <button class="btn" id="toggleClearOnLoad">🧼 Clear on Load: <b id="clearOnLoadState">ON</b><small>Auto-clear preset</small></button>
         </div>
+
       </div>
     </details>
 
-    <div class="hud">
-      <div>Preset: <strong id="presetName">Hit Sparks</strong></div>
-      <div>Particles: <strong id="count">0</strong></div>
-    </div>
+  </aside>
 
-    <div class="hint">
-      Hue tip: Ice vibe often lives around <span class="kbd">180–220</span>, fire vibe around <span class="kbd">20–55</span>.
-      If you want “shimmer white”, set saturation low and value high.
-    </div>
-  </section>
-
-  <section>
+  <section class="canvas-pane">
     <canvas id="canvas"></canvas>
+    <div class="canvas-hud">
+      <div class="hud-chip">Preset: <strong id="presetName">—</strong></div>
+      <div class="hud-chip">Particles: <strong id="count">0</strong></div>
+    </div>
   </section>
+
 </main>
 
-<script>
-/* ============================================================
-   Particle Engine v0.3 (Hue Range Edition)
-   Step 1: Color scales for sliders + readouts
-   Step 2: Plus shape
-============================================================ */
+<script type="module" src="src/main.js"></script>
 
-const VERSION = "0.3-hue-ui";
-
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-// ---------------------------
-// Helpers
-// ---------------------------
-
-function rand(min, max){ return Math.random() * (max - min) + min; }
-function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-
-function degToRad(d){ return (d * Math.PI) / 180; }
-
-function safeMinMaxSwap(minVal, maxVal){
-  if (minVal > maxVal) return [maxVal, minVal];
-  return [minVal, maxVal];
-}
-
-function wrap360(h){
-  h = h % 360;
-  if (h < 0) h += 360;
-  return h;
-}
-
-// pick a random hue along the shortest arc between A and B (wrap-aware)
-function randHue(hA, hB){
-  hA = wrap360(hA);
-  hB = wrap360(hB);
-
-  let delta = (hB - hA + 360) % 360; // [0..359]
-  if (delta > 180) delta -= 360;     // [-180..180]
-
-  const t = Math.random();
-  return wrap360(hA + delta * t);
-}
-
-// interpolate hue along the shortest arc (wrap-aware)
-function lerpHue(h0, h1, t){
-  h0 = wrap360(h0);
-  h1 = wrap360(h1);
-
-  let delta = (h1 - h0 + 360) % 360;
-  if (delta > 180) delta -= 360;
-
-  return wrap360(h0 + delta * t);
-}
-
-// HSV -> RGB (h:0..360, s/v:0..100)
-function hsvToRgb(h, s, v){
-  s /= 100;
-  v /= 100;
-
-  const c = v * s;
-  const hh = (wrap360(h) / 60);
-  const x = c * (1 - Math.abs((hh % 2) - 1));
-  const m = v - c;
-
-  let r = 0, g = 0, b = 0;
-
-  if (hh >= 0 && hh < 1)      [r,g,b] = [c,x,0];
-  else if (hh < 2)            [r,g,b] = [x,c,0];
-  else if (hh < 3)            [r,g,b] = [0,c,x];
-  else if (hh < 4)            [r,g,b] = [0,x,c];
-  else if (hh < 5)            [r,g,b] = [x,0,c];
-  else                        [r,g,b] = [c,0,x];
-
-  r = Math.round((r + m) * 255);
-  g = Math.round((g + m) * 255);
-  b = Math.round((b + m) * 255);
-
-  return { r, g, b };
-}
-
-function rgbToCss({r,g,b}){
-  return `rgb(${r},${g},${b})`;
-}
-
-// ---------------------------
-// UI
-// ---------------------------
-
-const ui = {
-  // HUD
-  presetName: document.getElementById("presetName"),
-  count: document.getElementById("count"),
-
-  // Library
-  presetSelect: document.getElementById("presetSelect"),
-  saveName: document.getElementById("saveName"),
-  btnLoadPreset: document.getElementById("btnLoadPreset"),
-  btnSaveNew: document.getElementById("btnSaveNew"),
-  btnOverwrite: document.getElementById("btnOverwrite"),
-  btnDelete: document.getElementById("btnDelete"),
-  btnResetDefaults: document.getElementById("btnResetDefaults"),
-  btnExportJSON: document.getElementById("btnExportJSON"),
-  btnImportJSON: document.getElementById("btnImportJSON"),
-  btnClearParticles: document.getElementById("btnClearParticles"),
-
-  // Editor
-  ed: {
-    name: document.getElementById("ed_name"),
-    shape: document.getElementById("ed_shape"),
-
-    hueAnim: document.getElementById("ed_hueAnim"),
-
-    hueA: document.getElementById("ed_hueA"),
-    hueB: document.getElementById("ed_hueB"),
-    satMin: document.getElementById("ed_satMin"),
-    satMax: document.getElementById("ed_satMax"),
-    valMin: document.getElementById("ed_valMin"),
-    valMax: document.getElementById("ed_valMax"),
-
-    mult: document.getElementById("ed_mult"),
-    spreadA: document.getElementById("ed_spreadA"),
-    spreadB: document.getElementById("ed_spreadB"),
-    speedMin: document.getElementById("ed_speedMin"),
-    speedMax: document.getElementById("ed_speedMax"),
-    sizeMin: document.getElementById("ed_sizeMin"),
-    sizeMax: document.getElementById("ed_sizeMax"),
-    sizeDecayMin: document.getElementById("ed_sizeDecayMin"),
-    sizeDecayMax: document.getElementById("ed_sizeDecayMax"),
-    lifeMin: document.getElementById("ed_lifeMin"),
-    lifeMax: document.getElementById("ed_lifeMax"),
-    dragMin: document.getElementById("ed_dragMin"),
-    dragMax: document.getElementById("ed_dragMax"),
-    gravityScale: document.getElementById("ed_gravityScale"),
-    jitter: document.getElementById("ed_jitter"),
-    fade: document.getElementById("ed_fade"),
-  },
-
-  btnRandomize: document.getElementById("btnRandomize"),
-  btnRevertSelected: document.getElementById("btnRevertSelected"),
-
-  // Engine
-  strength: document.getElementById("strength"),
-  gravity: document.getElementById("gravity"),
-  brushSpacing: document.getElementById("brushSpacing"),
-  brushMode: document.getElementById("brushMode"),
-  blendMode: document.getElementById("blendMode"),
-  maxParticles: document.getElementById("maxParticles"),
-  pause: document.getElementById("pause"),
-  toggleClearOnLoad: document.getElementById("toggleClearOnLoad"),
-  clearOnLoadState: document.getElementById("clearOnLoadState"),
-
-  // NEW: color scales + readouts
-  scaleHue: document.getElementById("scaleHue"),
-  scaleSat: document.getElementById("scaleSat"),
-  scaleVal: document.getElementById("scaleVal"),
-  roHue: document.getElementById("roHue"),
-  roSat: document.getElementById("roSat"),
-  roVal: document.getElementById("roVal"),
-};
-
-// ---------------------------
-// Canvas sizing
-// ---------------------------
-
-function resizeCanvas(){
-  const dpr = Math.max(1, window.devicePixelRatio || 1);
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.floor(rect.width * dpr);
-  canvas.height = Math.floor(rect.height * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-// Accordion behavior: desktop open, mobile collapsed
-function setAccordionDefaults(){
-  const isMobile = window.matchMedia("(max-width: 900px)").matches;
-  const accordions = document.querySelectorAll(".accordion");
-  accordions.forEach((d) => {
-    if (isMobile) d.removeAttribute("open");
-    else d.setAttribute("open", "");
-  });
-}
-window.addEventListener("resize", setAccordionDefaults);
-setAccordionDefaults();
-
-// ---------------------------
-// Engine state
-// ---------------------------
-
-const particles = [];
-
-const engine = {
-  paused: false,
-  gravity: 240,
-  strength: 60,
-
-  brushOnDrag: true,
-  brushSpacing: 14,
-
-  blendMode: "source-over",
-  maxParticles: 6000,
-
-  clearOnLoad: true,
-};
-
-// ---------------------------
-// Preset system
-// ---------------------------
-
-const STORAGE_KEY = "dojo_particle_presets_v2_hue";
-
-function buildDefaultPresets(){
-  return {
-    hit: {
-      id: "hit",
-      name: "Hit Sparks",
-      shape: "circle",
-
-      hueA: 35,
-      hueB: 55,
-      satMin: 70,
-      satMax: 100,
-      valMin: 70,
-      valMax: 100,
-      hueAnim: false,
-
-      mult: 0.8,
-      spreadA: 0,
-      spreadB: 360,
-      speedMin: 140,
-      speedMax: 520,
-      sizeMin: 2,
-      sizeMax: 5,
-      sizeDecayMin: 7,
-      sizeDecayMax: 14,
-      lifeMin: 0.25,
-      lifeMax: 0.6,
-      dragMin: 1.0,
-      dragMax: 3.0,
-      gravityScale: 1.0,
-      jitter: 25,
-      fade: 1.1,
-    },
-
-    heal: {
-      id: "heal",
-      name: "Heal Glow",
-      shape: "plus",
-
-      hueA: 155,
-      hueB: 190,
-      satMin: 45,
-      satMax: 90,
-      valMin: 75,
-      valMax: 100,
-      hueAnim: true,
-
-      mult: 0.5,
-      spreadA: -135,
-      spreadB: -45,
-      speedMin: 40,
-      speedMax: 170,
-      sizeMin: 4,
-      sizeMax: 10,
-      sizeDecayMin: 3,
-      sizeDecayMax: 6,
-      lifeMin: 0.6,
-      lifeMax: 1.2,
-      dragMin: 0.2,
-      dragMax: 1.3,
-      gravityScale: -0.15,
-      jitter: 10,
-      fade: 0.8,
-    },
-
-    shimmer: {
-      id: "shimmer",
-      name: "UI Shimmer",
-      shape: "star",
-
-      hueA: 200,
-      hueB: 260,
-      satMin: 0,
-      satMax: 12,
-      valMin: 88,
-      valMax: 100,
-      hueAnim: false,
-
-      mult: 0.45,
-      spreadA: 0,
-      spreadB: 360,
-      speedMin: 10,
-      speedMax: 85,
-      sizeMin: 1,
-      sizeMax: 3,
-      sizeDecayMin: 1,
-      sizeDecayMax: 4,
-      lifeMin: 0.7,
-      lifeMax: 1.6,
-      dragMin: 0.2,
-      dragMax: 1.0,
-      gravityScale: 0.05,
-      jitter: 6,
-      fade: 0.55,
-    },
-
-    smoke: {
-      id: "smoke",
-      name: "Smoke",
-      shape: "circle",
-
-      hueA: 0,
-      hueB: 360,
-      satMin: 0,
-      satMax: 8,
-      valMin: 30,
-      valMax: 65,
-      hueAnim: false,
-
-      mult: 0.30,
-      spreadA: -180,
-      spreadB: 0,
-      speedMin: 10,
-      speedMax: 70,
-      sizeMin: 10,
-      sizeMax: 24,
-      sizeDecayMin: 0.5,
-      sizeDecayMax: 2.2,
-      lifeMin: 1.2,
-      lifeMax: 2.6,
-      dragMin: 0.0,
-      dragMax: 0.9,
-      gravityScale: -0.08,
-      jitter: 5,
-      fade: 0.35,
-    },
-
-    confetti: {
-      id: "confetti",
-      name: "Confetti",
-      shape: "square",
-
-      hueA: 0,
-      hueB: 360,
-      satMin: 70,
-      satMax: 100,
-      valMin: 75,
-      valMax: 100,
-      hueAnim: false,
-
-      mult: 0.85,
-      spreadA: 0,
-      spreadB: 360,
-      speedMin: 150,
-      speedMax: 540,
-      sizeMin: 2,
-      sizeMax: 6,
-      sizeDecayMin: 2,
-      sizeDecayMax: 8,
-      lifeMin: 0.45,
-      lifeMax: 1.15,
-      dragMin: 0.8,
-      dragMax: 2.4,
-      gravityScale: 0.9,
-      jitter: 45,
-      fade: 0.7,
-    },
-  };
-}
-
-let presetLibrary = {};
-let selectedPresetId = "hit";
-let currentPreset = null;
-
-function loadLibrary(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw){
-    presetLibrary = buildDefaultPresets();
-    saveLibrary();
-    return;
-  }
-  try{
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") throw new Error("Invalid JSON");
-    presetLibrary = parsed;
-  }catch{
-    presetLibrary = buildDefaultPresets();
-    saveLibrary();
-  }
-}
-
-function saveLibrary(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(presetLibrary));
-}
-
-function listPresetsSorted(){
-  return Object.values(presetLibrary).sort((a,b) => (a.name||"").localeCompare(b.name||""));
-}
-
-function isBuiltIn(id){
-  const defaults = buildDefaultPresets();
-  return Boolean(defaults[id]);
-}
-
-function refreshPresetSelect(){
-  const opts = listPresetsSorted();
-  ui.presetSelect.innerHTML = "";
-
-  for (const p of opts){
-    const option = document.createElement("option");
-    option.value = p.id;
-    option.textContent = p.name + (isBuiltIn(p.id) ? " (default)" : "");
-    ui.presetSelect.appendChild(option);
-  }
-
-  if (!presetLibrary[selectedPresetId]){
-    selectedPresetId = opts[0]?.id || "hit";
-  }
-  ui.presetSelect.value = selectedPresetId;
-}
-
-// ---------------------------
-// Color scale UI (NEW)
-// ---------------------------
-
-function gradientHue(){
-  // full hue wheel
-  return "linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)";
-}
-
-function gradientSat(h){
-  // saturation from 0->100 at fixed hue, v=100
-  const c0 = rgbToCss(hsvToRgb(h, 0, 100));
-  const c1 = rgbToCss(hsvToRgb(h, 100, 100));
-  return `linear-gradient(90deg, ${c0}, ${c1})`;
-}
-
-function gradientVal(h, s){
-  // value from 0->100 at fixed hue/sat
-  const c0 = rgbToCss(hsvToRgb(h, s, 0));
-  const c1 = rgbToCss(hsvToRgb(h, s, 100));
-  return `linear-gradient(90deg, ${c0}, ${c1})`;
-}
-
-function updateColorScales(){
-  // read current editor values
-  const hA = Number(ui.ed.hueA.value);
-  const hB = Number(ui.ed.hueB.value);
-  const sMin = Number(ui.ed.satMin.value);
-  const sMax = Number(ui.ed.satMax.value);
-  const vMin = Number(ui.ed.valMin.value);
-  const vMax = Number(ui.ed.valMax.value);
-
-  // Hue scale: show full wheel for reference
-  ui.scaleHue.style.background = gradientHue();
-
-  // Sat & Val scale are more meaningful if tied to the current hue range midpoint
-  const hMid = wrap360(hA + (((hB - hA + 360) % 360) / 2));
-
-  ui.scaleSat.style.background = gradientSat(hMid);
-  ui.scaleVal.style.background = gradientVal(hMid, clamp((sMin + sMax) / 2, 0, 100));
-
-  // Readouts
-  ui.roHue.textContent = `Hue: ${Math.round(hA)} → ${Math.round(hB)}`;
-  ui.roSat.textContent = `Sat: ${Math.round(sMin)} → ${Math.round(sMax)}`;
-  ui.roVal.textContent = `Val: ${Math.round(vMin)} → ${Math.round(vMax)}`;
-}
-
-// ---------------------------
-// Editor sync
-// ---------------------------
-
-function applyPresetToEditor(preset){
-  ui.ed.name.value = preset.name ?? "";
-  ui.ed.shape.value = preset.shape ?? "circle";
-
-  ui.ed.hueAnim.checked = Boolean(preset.hueAnim);
-
-  ui.ed.hueA.value = preset.hueA ?? 0;
-  ui.ed.hueB.value = preset.hueB ?? 360;
-  ui.ed.satMin.value = preset.satMin ?? 70;
-  ui.ed.satMax.value = preset.satMax ?? 100;
-  ui.ed.valMin.value = preset.valMin ?? 70;
-  ui.ed.valMax.value = preset.valMax ?? 100;
-
-  ui.ed.mult.value = preset.mult ?? 0.6;
-  ui.ed.spreadA.value = preset.spreadA ?? 0;
-  ui.ed.spreadB.value = preset.spreadB ?? 360;
-
-  ui.ed.speedMin.value = preset.speedMin ?? 50;
-  ui.ed.speedMax.value = preset.speedMax ?? 200;
-
-  ui.ed.sizeMin.value = preset.sizeMin ?? 2;
-  ui.ed.sizeMax.value = preset.sizeMax ?? 6;
-
-  ui.ed.sizeDecayMin.value = preset.sizeDecayMin ?? 2;
-  ui.ed.sizeDecayMax.value = preset.sizeDecayMax ?? 8;
-
-  ui.ed.lifeMin.value = preset.lifeMin ?? 0.4;
-  ui.ed.lifeMax.value = preset.lifeMax ?? 1.0;
-
-  ui.ed.dragMin.value = preset.dragMin ?? 0.1;
-  ui.ed.dragMax.value = preset.dragMax ?? 2.0;
-
-  ui.ed.gravityScale.value = preset.gravityScale ?? 1.0;
-  ui.ed.jitter.value = preset.jitter ?? 10;
-  ui.ed.fade.value = preset.fade ?? 1.0;
-
-  updateColorScales();
-}
-
-function readEditorToPreset(){
-  const p = deepClone(currentPreset);
-
-  p.name = ui.ed.name.value.trim() || "Untitled";
-  p.shape = ui.ed.shape.value;
-
-  p.hueAnim = Boolean(ui.ed.hueAnim.checked);
-
-  p.hueA = Number(ui.ed.hueA.value);
-  p.hueB = Number(ui.ed.hueB.value);
-  p.satMin = Number(ui.ed.satMin.value);
-  p.satMax = Number(ui.ed.satMax.value);
-  p.valMin = Number(ui.ed.valMin.value);
-  p.valMax = Number(ui.ed.valMax.value);
-
-  p.mult = Number(ui.ed.mult.value);
-
-  p.spreadA = Number(ui.ed.spreadA.value);
-  p.spreadB = Number(ui.ed.spreadB.value);
-
-  p.speedMin = Number(ui.ed.speedMin.value);
-  p.speedMax = Number(ui.ed.speedMax.value);
-
-  p.sizeMin = Number(ui.ed.sizeMin.value);
-  p.sizeMax = Number(ui.ed.sizeMax.value);
-
-  p.sizeDecayMin = Number(ui.ed.sizeDecayMin.value);
-  p.sizeDecayMax = Number(ui.ed.sizeDecayMax.value);
-
-  p.lifeMin = Number(ui.ed.lifeMin.value);
-  p.lifeMax = Number(ui.ed.lifeMax.value);
-
-  p.dragMin = Number(ui.ed.dragMin.value);
-  p.dragMax = Number(ui.ed.dragMax.value);
-
-  p.gravityScale = Number(ui.ed.gravityScale.value);
-  p.jitter = Number(ui.ed.jitter.value);
-  p.fade = Number(ui.ed.fade.value);
-
-  // Fix inverted min/max (hue A/B is wrap-aware, keep)
-  [p.satMin, p.satMax] = safeMinMaxSwap(p.satMin, p.satMax);
-  [p.valMin, p.valMax] = safeMinMaxSwap(p.valMin, p.valMax);
-  [p.spreadA, p.spreadB] = safeMinMaxSwap(p.spreadA, p.spreadB);
-  [p.speedMin, p.speedMax] = safeMinMaxSwap(p.speedMin, p.speedMax);
-  [p.sizeMin, p.sizeMax] = safeMinMaxSwap(p.sizeMin, p.sizeMax);
-  [p.sizeDecayMin, p.sizeDecayMax] = safeMinMaxSwap(p.sizeDecayMin, p.sizeDecayMax);
-  [p.lifeMin, p.lifeMax] = safeMinMaxSwap(p.lifeMin, p.lifeMax);
-  [p.dragMin, p.dragMax] = safeMinMaxSwap(p.dragMin, p.dragMax);
-
-  currentPreset = p;
-  ui.presetName.textContent = currentPreset.name;
-
-  updateColorScales();
-}
-
-function loadPreset(id){
-  const preset = presetLibrary[id];
-  if (!preset) return;
-
-  selectedPresetId = id;
-  currentPreset = deepClone(preset);
-
-  applyPresetToEditor(currentPreset);
-  readEditorToPreset();
-
-  if (engine.clearOnLoad){
-    particles.length = 0;
-    ui.count.textContent = "0";
-  }
-}
-
-// ---------------------------
-// Save / overwrite / delete
-// ---------------------------
-
-function makeIdFromName(name){
-  return name.toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 40) + "-" + Math.floor(Math.random() * 9999);
-}
-
-function saveNewPreset(){
-  const name = (ui.saveName.value || currentPreset.name || "Untitled").trim();
-  const id = makeIdFromName(name);
-
-  const p = deepClone(currentPreset);
-  p.id = id;
-  p.name = name;
-
-  presetLibrary[id] = p;
-  saveLibrary();
-
-  selectedPresetId = id;
-  refreshPresetSelect();
-  ui.presetSelect.value = id;
-}
-
-function overwriteSelectedPreset(){
-  const id = ui.presetSelect.value;
-  if (!id || !presetLibrary[id]) return;
-
-  const p = deepClone(currentPreset);
-  p.id = id;
-  p.name = currentPreset.name || presetLibrary[id].name || "Untitled";
-
-  presetLibrary[id] = p;
-  saveLibrary();
-
-  refreshPresetSelect();
-  ui.presetSelect.value = id;
-}
-
-function deleteSelectedPreset(){
-  const id = ui.presetSelect.value;
-  if (!id || !presetLibrary[id]) return;
-
-  if (isBuiltIn(id)){
-    alert("You can’t delete default presets. Overwrite it if you want to customize it.");
-    return;
-  }
-
-  delete presetLibrary[id];
-  saveLibrary();
-
-  const fallback = listPresetsSorted()[0]?.id || "hit";
-  selectedPresetId = fallback;
-  refreshPresetSelect();
-  loadPreset(selectedPresetId);
-}
-
-// ---------------------------
-// Export / Import
-// ---------------------------
-
-async function copyToClipboard(text){
-  try{
-    await navigator.clipboard.writeText(text);
-    alert("Copied to clipboard ✅");
-  }catch{
-    prompt("Copy this JSON:", text);
-  }
-}
-
-async function pasteFromClipboard(){
-  try{
-    return await navigator.clipboard.readText();
-  }catch{
-    return prompt("Paste your JSON here:") || "";
-  }
-}
-
-async function exportJSON(){
-  const json = JSON.stringify(presetLibrary, null, 2);
-  await copyToClipboard(json);
-}
-
-async function importJSON(){
-  const text = await pasteFromClipboard();
-  if (!text.trim()) return;
-
-  try{
-    const parsed = JSON.parse(text);
-    if (!parsed || typeof parsed !== "object") throw new Error("Invalid JSON");
-    presetLibrary = { ...presetLibrary, ...parsed };
-    saveLibrary();
-    refreshPresetSelect();
-    loadPreset(ui.presetSelect.value);
-    alert("Imported ✅");
-  }catch{
-    alert("Import failed. JSON not valid.");
-  }
-}
-
-// ---------------------------
-// Shapes
-// ---------------------------
-
-function drawStar(ctx, cx, cy, spikes, outerR, innerR){
-  let rot = Math.PI / 2 * 3;
-  let x = cx;
-  let y = cy;
-  const step = Math.PI / spikes;
-
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - outerR);
-  for (let i=0;i<spikes;i++){
-    x = cx + Math.cos(rot) * outerR;
-    y = cy + Math.sin(rot) * outerR;
-    ctx.lineTo(x, y);
-    rot += step;
-
-    x = cx + Math.cos(rot) * innerR;
-    y = cy + Math.sin(rot) * innerR;
-    ctx.lineTo(x, y);
-    rot += step;
-  }
-  ctx.lineTo(cx, cy - outerR);
-  ctx.closePath();
-}
-
-function drawPlus(ctx, cx, cy, size){
-  // a clean plus: two rounded-ish rectangles
-  const arm = size * 0.75;   // half-length of arms
-  const thick = Math.max(2, size * 0.55);
-
-  ctx.beginPath();
-  // vertical
-  ctx.rect(cx - thick/2, cy - arm, thick, arm * 2);
-  // horizontal
-  ctx.rect(cx - arm, cy - thick/2, arm * 2, thick);
-}
-
-function renderParticle(ctx, p){
-  const size = p.size;
-  const x = p.x;
-  const y = p.y;
-
-  if (p.shape === "square"){
-    const s = size * 2;
-    ctx.fillRect(x - s/2, y - s/2, s, s);
-    return;
-  }
-
-  if (p.shape === "star"){
-    drawStar(ctx, x, y, 5, size * 1.6, size * 0.75);
-    ctx.fill();
-    return;
-  }
-
-  if (p.shape === "plus"){
-    drawPlus(ctx, x, y, size * 1.8);
-    ctx.fill();
-    return;
-  }
-
-  ctx.beginPath();
-  ctx.arc(x, y, size, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// ---------------------------
-// Hue Range color generation
-// ---------------------------
-
-function randomHSVFromPreset(preset){
-  const h = randHue(preset.hueA, preset.hueB);
-  const s = rand(preset.satMin, preset.satMax);
-  const v = rand(preset.valMin, preset.valMax);
-  return { h, s, v };
-}
-
-function cssFromHSV(hsv){
-  return rgbToCss(hsvToRgb(hsv.h, hsv.s, hsv.v));
-}
-
-// ---------------------------
-// Emit
-// ---------------------------
-
-function addParticle(p){
-  if (particles.length >= engine.maxParticles) return;
-  particles.push(p);
-}
-
-function emitBurst(x, y, strength){
-  const preset = currentPreset;
-  if (!preset) return;
-
-  const n = Math.floor(clamp(strength, 1, 400) * preset.mult);
-
-  for (let i=0;i<n;i++){
-    const aMin = degToRad(preset.spreadA);
-    const aMax = degToRad(preset.spreadB);
-    const angle = rand(aMin, aMax);
-
-    const [speedMin, speedMax] = safeMinMaxSwap(preset.speedMin, preset.speedMax);
-    const speed = rand(speedMin, speedMax);
-
-    const [sizeMin, sizeMax] = safeMinMaxSwap(preset.sizeMin, preset.sizeMax);
-    const size = rand(sizeMin, sizeMax);
-
-    const [sdMin, sdMax] = safeMinMaxSwap(preset.sizeDecayMin, preset.sizeDecayMax);
-    const sizeDecay = rand(sdMin, sdMax);
-
-    const [lifeMin, lifeMax] = safeMinMaxSwap(preset.lifeMin, preset.lifeMax);
-    const life = rand(lifeMin, lifeMax);
-
-    const [dragMin, dragMax] = safeMinMaxSwap(preset.dragMin, preset.dragMax);
-    const drag = rand(dragMin, dragMax);
-
-    const hsv0 = randomHSVFromPreset(preset);
-    let hsv1 = hsv0;
-
-    if (preset.hueAnim){
-      hsv1 = randomHSVFromPreset(preset);
-    }
-
-    const colorStatic = preset.hueAnim ? null : cssFromHSV(hsv0);
-
-    addParticle({
-      x, y,
-      vx: Math.cos(angle) * speed + rand(-preset.jitter, preset.jitter),
-      vy: Math.sin(angle) * speed + rand(-preset.jitter, preset.jitter),
-
-      size,
-      sizeDecay,
-
-      life,
-      age: 0,
-
-      drag,
-      gravityScale: preset.gravityScale,
-
-      hsv0,
-      hsv1,
-      colorStatic,
-
-      alpha: 1,
-      fade: preset.fade,
-
-      shape: preset.shape,
-    });
-  }
-}
-
-// ---------------------------
-// Loop
-// ---------------------------
-
-let last = performance.now();
-
-function step(now){
-  const dt = Math.min(0.033, (now - last) / 1000);
-  last = now;
-
-  if (!engine.paused) simulate(dt);
-  render();
-
-  requestAnimationFrame(step);
-}
-
-function simulate(dt){
-  engine.gravity = Number(ui.gravity.value);
-  engine.strength = Number(ui.strength.value);
-
-  engine.brushSpacing = Number(ui.brushSpacing.value);
-  engine.brushOnDrag = ui.brushMode.value === "on";
-
-  engine.blendMode = ui.blendMode.value;
-  engine.maxParticles = Number(ui.maxParticles.value);
-
-  for (let i=particles.length-1;i>=0;i--){
-    const p = particles[i];
-
-    p.age += dt;
-    if (p.age >= p.life){
-      particles.splice(i,1);
-      continue;
-    }
-
-    const g = engine.gravity * p.gravityScale;
-    p.vy += g * dt;
-
-    p.vx -= p.vx * p.drag * dt;
-    p.vy -= p.vy * p.drag * dt;
-
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-
-    p.size = Math.max(0, p.size - p.sizeDecay * dt);
-
-    const t = p.age / p.life;
-    p.alpha = Math.max(0, 1 - t * p.fade);
-  }
-
-  ui.count.textContent = String(particles.length);
-}
-
-function render(){
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-
-  ctx.clearRect(0, 0, w, h);
-
-  ctx.save();
-  ctx.globalAlpha = 0.5;
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.fillRect(0, 0, w, h);
-  ctx.restore();
-
-  ctx.save();
-  ctx.globalCompositeOperation = engine.blendMode;
-
-  for (const p of particles){
-    if (p.alpha <= 0 || p.size <= 0) continue;
-
-    let fill = p.colorStatic;
-
-    if (!fill){
-      const t = p.age / p.life;
-      const hL = lerpHue(p.hsv0.h, p.hsv1.h, t);
-      const sL = p.hsv0.s + (p.hsv1.s - p.hsv0.s) * t;
-      const vL = p.hsv0.v + (p.hsv1.v - p.hsv0.v) * t;
-      fill = rgbToCss(hsvToRgb(hL, sL, vL));
-    }
-
-    ctx.save();
-    ctx.globalAlpha = p.alpha;
-    ctx.fillStyle = fill;
-    renderParticle(ctx, p);
-    ctx.restore();
-  }
-
-  ctx.restore();
-
-  if (pointer.active){
-    ctx.save();
-    ctx.globalAlpha = 0.45;
-    ctx.strokeStyle = "rgba(255,255,255,0.25)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(pointer.x, pointer.y, 10, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
-}
-
-// ---------------------------
-// Input
-// ---------------------------
-
-const pointer = {
-  x: 0,
-  y: 0,
-  active: false,
-  lastEmitX: 0,
-  lastEmitY: 0,
-};
-
-function getCanvasPos(e){
-  const rect = canvas.getBoundingClientRect();
-  return {
-    x: (e.clientX - rect.left),
-    y: (e.clientY - rect.top),
-  };
-}
-
-function spawnAt(x, y){
-  emitBurst(x, y, engine.strength);
-}
-
-canvas.addEventListener("pointerdown", (e) => {
-  canvas.setPointerCapture(e.pointerId);
-  pointer.active = true;
-
-  const pos = getCanvasPos(e);
-  pointer.x = pos.x;
-  pointer.y = pos.y;
-
-  pointer.lastEmitX = pos.x;
-  pointer.lastEmitY = pos.y;
-
-  spawnAt(pos.x, pos.y);
-});
-
-canvas.addEventListener("pointermove", (e) => {
-  if (!pointer.active) return;
-
-  const pos = getCanvasPos(e);
-  pointer.x = pos.x;
-  pointer.y = pos.y;
-
-  if (!engine.brushOnDrag) return;
-
-  const dx = pos.x - pointer.lastEmitX;
-  const dy = pos.y - pointer.lastEmitY;
-  const dist = Math.hypot(dx, dy);
-
-  if (dist >= engine.brushSpacing){
-    const steps = Math.floor(dist / engine.brushSpacing);
-    for (let i=1;i<=steps;i++){
-      const t = i / steps;
-      spawnAt(pointer.lastEmitX + dx * t, pointer.lastEmitY + dy * t);
-    }
-    pointer.lastEmitX = pos.x;
-    pointer.lastEmitY = pos.y;
-  }
-});
-
-canvas.addEventListener("pointerup", () => {
-  pointer.active = false;
-});
-
-// ---------------------------
-// Wire UI
-// ---------------------------
-
-function hookEditorLive(){
-  const editorEls = Object.values(ui.ed);
-  editorEls.forEach((el) => {
-    const evt = (el.type === "checkbox") ? "change" : "input";
-    el.addEventListener(evt, () => readEditorToPreset());
-    el.addEventListener("change", () => readEditorToPreset());
-  });
-}
-
-ui.btnClearParticles.addEventListener("click", () => {
-  particles.length = 0;
-  ui.count.textContent = "0";
-});
-
-ui.btnLoadPreset.addEventListener("click", () => {
-  const id = ui.presetSelect.value;
-  if (!id) return;
-  loadPreset(id);
-});
-
-ui.presetSelect.addEventListener("change", () => {
-  selectedPresetId = ui.presetSelect.value;
-});
-
-ui.btnSaveNew.addEventListener("click", saveNewPreset);
-ui.btnOverwrite.addEventListener("click", overwriteSelectedPreset);
-ui.btnDelete.addEventListener("click", deleteSelectedPreset);
-
-ui.btnResetDefaults.addEventListener("click", () => {
-  if (!confirm("Reset presets to defaults? This will overwrite your library.")) return;
-  presetLibrary = buildDefaultPresets();
-  saveLibrary();
-  selectedPresetId = "hit";
-  refreshPresetSelect();
-  loadPreset("hit");
-});
-
-ui.btnExportJSON.addEventListener("click", exportJSON);
-ui.btnImportJSON.addEventListener("click", importJSON);
-
-ui.btnRandomize.addEventListener("click", () => {
-  ui.ed.jitter.value = clamp(Number(ui.ed.jitter.value) + rand(-8, 14), 0, 120);
-  ui.ed.fade.value = clamp(Number(ui.ed.fade.value) + rand(-0.15, 0.25), 0.05, 3.0);
-  ui.ed.speedMax.value = clamp(Number(ui.ed.speedMax.value) + rand(-60, 80), 0, 900);
-  ui.ed.mult.value = clamp(Number(ui.ed.mult.value) + rand(-0.15, 0.15), 0.05, 2.0);
-
-  ui.ed.hueA.value = wrap360(Number(ui.ed.hueA.value) + rand(-8, 8));
-  ui.ed.hueB.value = wrap360(Number(ui.ed.hueB.value) + rand(-8, 8));
-
-  readEditorToPreset();
-});
-
-ui.btnRevertSelected.addEventListener("click", () => {
-  loadPreset(ui.presetSelect.value);
-});
-
-ui.pause.addEventListener("click", () => {
-  engine.paused = !engine.paused;
-  ui.pause.innerHTML = engine.paused
-    ? "▶️ Resume <small>Toggle simulation</small>"
-    : "⏸️ Pause <small>Toggle simulation</small>";
-});
-
-ui.toggleClearOnLoad.addEventListener("click", () => {
-  engine.clearOnLoad = !engine.clearOnLoad;
-  ui.clearOnLoadState.textContent = engine.clearOnLoad ? "ON" : "OFF";
-});
-
-// Keyboard
-window.addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
-    engine.paused = !engine.paused;
-    ui.pause.innerHTML = engine.paused
-      ? "▶️ Resume <small>Toggle simulation</small>"
-      : "⏸️ Pause <small>Toggle simulation</small>";
-  }
-
-  if (e.key.toLowerCase() === "c"){
-    particles.length = 0;
-    ui.count.textContent = "0";
-  }
-
-  if (e.key === "1") loadPreset("hit");
-  if (e.key === "2") loadPreset("heal");
-  if (e.key === "3") loadPreset("shimmer");
-  if (e.key === "4") loadPreset("smoke");
-  if (e.key === "5") loadPreset("confetti");
-});
-
-// ---------------------------
-// Init
-// ---------------------------
-
-loadLibrary();
-refreshPresetSelect();
-hookEditorLive();
-
-ui.clearOnLoadState.textContent = engine.clearOnLoad ? "ON" : "OFF";
-
-loadPreset("hit");
-requestAnimationFrame(step);
-</script>
 </body>
 </html>
